@@ -1,0 +1,39 @@
+{
+  "name": "vue-diff-viewer",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/vue-diff-viewer.umd.cjs",
+  "module": "./dist/vue-diff-viewer.js",
+  "exports": {
+    ".": {
+      "import": "./dist/vue-diff-viewer.js",
+      "require": "./dist/vue-diff-viewer.umd.cjs"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --emitDeclarationOnly && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "diff": "^5.2.0",
+    "lodash": "^4.17.21",
+    "vue": "^3.4.19"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.0.9",
+    "@types/lodash": "^4.14.202",
+    "@types/node": "^20.11.21",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "sass": "^1.71.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.4",
+    "vue-tsc": "^1.8.27"
+  }
+}
