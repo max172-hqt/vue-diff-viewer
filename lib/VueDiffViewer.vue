@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { diffChars, diffLines } from "diff";
-import { groupBy } from "lodash";
-
-const OPENING_TAG = "<code-modifed>";
-const CLOSING_TAG = "</code-modifed>";
+import { useDiff, ChangeType } from "./diff";
 
 const props = defineProps({
   prev: {
@@ -17,120 +12,44 @@ const props = defineProps({
   },
 });
 
-const changes = computed(() => {
-  return diffLines(props.prev, props.curr);
-});
+const { displayedLines: lines } = useDiff(
+  props.prev,
+  props.curr
+);
 
-const lines = computed(() => {
-  const results = [];
-  let lineNumber = 1;
-  let previousLineLabel = 1;
-  let currentLineLabel = 1;
-
-  for (const change of changes.value) {
-    const parts = change.value.replace(/\n$/, "").split("\n");
-    const endWithNewLine = /\n$/.test(change.value);
-
-    let type = "";
-    if (change.added) type = "added";
-    else if (change.removed) type = "removed";
-    else type = "common";
-
-    for (const part of parts) {
-      if (type === "common") {
-        results.push(
-          {
-            lineNumber,
-            value: part,
-            type: "common_prev",
-            lineLabel: previousLineLabel,
-          },
-          {
-            lineNumber,
-            value: part,
-            type: "common_curr",
-            lineLabel: currentLineLabel,
-          }
-        );
-        if (parts.length > 1) {
-          previousLineLabel++;
-          currentLineLabel++;
-          lineNumber++;
-        }
-      } else {
-        results.push({
-          lineNumber: lineNumber,
-          lineLabel: type === "removed" ? previousLineLabel : currentLineLabel,
-          value: part,
-          type,
-        });
-        if (parts.length > 1) {
-          lineNumber++;
-          if (type === "removed") {
-            previousLineLabel++;
-          } else {
-            currentLineLabel++;
-          }
-        }
-      }
-    }
-
-    if (endWithNewLine && parts.length === 1) {
-      if (type === "removed") {
-        previousLineLabel++;
-      } else if (type === "added") {
-        currentLineLabel++;
-      } else {
-        previousLineLabel++;
-        currentLineLabel++;
-      }
-
-      if (type !== "removed") {
-        lineNumber++;
-      }
-    }
-  }
-
-  const grouped = groupBy(results, "lineNumber");
-
-  return grouped;
-});
+console.log(lines.value);
 </script>
 
 <template>
   <div class="wrapper">
     <div class="prev">
-      <template v-for="lineNumber in Object.keys(lines)">
+      <template v-for="line in lines">
         <div class="line">
           <div class="line-number">
-            {{
-              lines[lineNumber].length > 1 ? lines[lineNumber][0].lineLabel : ""
-            }}
+            {{ line.prev?.lineNumber }}
           </div>
-          <div>
-            <template v-for="part in lines[lineNumber]">
-              <span v-if="part.type === 'common_prev'">{{ part.value }}</span>
-              <span v-else-if="part.type === 'removed'" class="removed">{{
-                part.value
-              }}</span>
-              <span v-else><br /></span>
-            </template>
-          </div>
+          <pre
+            :class="{
+              removed: line.prev?.type === ChangeType.REMOVED,
+            }"
+            >{{ line.prev?.value }}</pre
+          >
         </div>
       </template>
     </div>
     <div class="curr">
-      <template v-for="lineNumber in Object.keys(lines)">
-        <div class="line">
-          <div class="line-number">{{ lineNumber }}</div>
-          <div>
-            <template v-for="part in lines[lineNumber]">
-              <span v-if="part.type === 'common_curr'">{{ part.value }}</span>
-              <span v-else-if="part.type === 'added'" class="added">{{
-                part.value
-              }}</span>
-            </template>
+      <template v-for="line in lines">
+        <div class="line" v-if="Object.keys(line.curr).length > 0">
+          <div class="line-number">
+            {{ line.curr?.lineNumber }}
           </div>
+          <pre
+            :class="{
+              added: line.curr?.type === ChangeType.ADDED,
+            }"
+            >
+            {{ line.curr?.value }}</pre
+          >
         </div>
       </template>
     </div>
@@ -139,11 +58,14 @@ const lines = computed(() => {
 
 <style scoped lang="scss">
 .wrapper {
-  font-family: "ui-monospace", "Courier New", Courier, monospace;
   width: 100%;
   background: #f1f1f1;
   display: flex;
-  white-space: pre-wrap;
+  padding: 0.5em 1em;
+
+  pre {
+    margin: 0;
+  }
 
   .prev,
   .curr {
@@ -152,6 +74,7 @@ const lines = computed(() => {
 
   .line {
     display: flex;
+    align-items: center;
     gap: 1rem;
   }
 
