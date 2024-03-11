@@ -22,7 +22,13 @@ console.log(lines.value);
     <thead v-if="false"></thead>
     <tbody>
       <tr v-for="line in lines">
-        <td class="num" :data-line-number="line.prev.lineNumber"></td>
+        <td
+          class="num"
+          :data-line-number="line.prev.lineNumber"
+          :class="{
+            'line-removed': line.prev.type === ChangeType.REMOVED,
+          }"
+        ></td>
         <td
           class="code"
           :class="{
@@ -30,13 +36,24 @@ console.log(lines.value);
           }"
         >
           <template v-if="Array.isArray(line.prev.value)">
-            <span v-for="word in line.prev.value" class="code-inner" :class="{
-              'word-removed': word.type === ChangeType.REMOVED
-            }">{{ word.value }}</span>
+            <span
+              v-for="word in line.prev.value"
+              class="code-inner"
+              :class="{
+                'word-removed': word.type === ChangeType.REMOVED,
+              }"
+              >{{ word.value }}</span
+            >
           </template>
           <span v-else class="code-inner">{{ line.prev.value }}</span>
         </td>
-        <td class="num" :data-line-number="line.curr.lineNumber"></td>
+        <td
+          class="num"
+          :data-line-number="line.curr.lineNumber"
+          :class="{
+            'line-added': line.curr.type === ChangeType.ADDED,
+          }"
+        ></td>
         <td
           class="code"
           :class="{
@@ -44,9 +61,14 @@ console.log(lines.value);
           }"
         >
           <template v-if="Array.isArray(line.curr.value)">
-            <span v-for="word in line.curr.value" class="code-inner" :class="{
-              'word-added': word.type === ChangeType.ADDED
-            }">{{ word.value }}</span>
+            <span
+              v-for="word in line.curr.value"
+              class="code-inner"
+              :class="{
+                'word-added': word.type === ChangeType.ADDED,
+              }"
+              >{{ word.value }}</span
+            >
           </template>
           <span v-else class="code-inner">{{ line.curr.value }}</span>
         </td>
@@ -65,7 +87,7 @@ console.log(lines.value);
 }
 
 .diff-table td:nth-child(2) {
-  border-right: 1px solid gray;
+  border-right: 1px solid lightgray;
 }
 
 .num {
@@ -94,15 +116,15 @@ console.log(lines.value);
 }
 
 .line-removed {
-  background-color: red;
-}
-.line-added {
-  background-color: green;
+  background-color: rgba(248, 81, 73, 0.1);
 }
 .word-removed {
-  background-color: yellow;
+  background-color: rgba(248, 81, 73, 0.4);;
+}
+.line-added {
+  background-color: rgba(46, 160, 67, 0.15);;
 }
 .word-added {
-  background-color: yellow;
+  background-color: rgba(46, 160, 67, 0.4);
 }
 </style>

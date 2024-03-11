@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { VueDiffViewer } from "../lib/main";
 
-const prev = ref(`var a1 = {
+const curr = ref(`var a1 = {
   "name": "vue-diff",
   "version": "0.0.0",
   "description": "Vue diff viewer",
@@ -11,7 +11,7 @@ const prev = ref(`var a1 = {
     "vue": "^3.0.0"
   }
 }`);
-const curr = ref(`const b2 = {
+const prev = ref(`const b2 = {
   "name": "vue-diff",
   "version": "1.0.0",
   "description": "Vue diff viewer",
