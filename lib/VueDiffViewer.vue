@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useDiff, ChangeType } from "./diff";
+import { ChangeType, useDiff } from "./diff";
 
 const props = defineProps({
   prev: {
@@ -12,80 +12,97 @@ const props = defineProps({
   },
 });
 
-const { displayedLines: lines } = useDiff(
-  props.prev,
-  props.curr
-);
+const { displayedLines: lines } = useDiff(props.prev, props.curr);
 
 console.log(lines.value);
 </script>
 
 <template>
-  <div class="wrapper">
-    <div class="prev">
-      <template v-for="line in lines">
-        <div class="line">
-          <div class="line-number">
-            {{ line.prev?.lineNumber }}
-          </div>
-          <pre
-            :class="{
-              removed: line.prev?.type === ChangeType.REMOVED,
-            }"
-            >{{ line.prev?.value }}</pre
-          >
-        </div>
-      </template>
-    </div>
-    <div class="curr">
-      <template v-for="line in lines">
-        <div class="line" v-if="Object.keys(line.curr).length > 0">
-          <div class="line-number">
-            {{ line.curr?.lineNumber }}
-          </div>
-          <pre
-            :class="{
-              added: line.curr?.type === ChangeType.ADDED,
-            }"
-            >
-            {{ line.curr?.value }}</pre
-          >
-        </div>
-      </template>
-    </div>
-  </div>
+  <table class="diff-table">
+    <thead v-if="false"></thead>
+    <tbody>
+      <tr v-for="line in lines">
+        <td class="num" :data-line-number="line.prev.lineNumber"></td>
+        <td
+          class="code"
+          :class="{
+            'line-removed': line.prev.type === ChangeType.REMOVED,
+          }"
+        >
+          <template v-if="Array.isArray(line.prev.value)">
+            <span v-for="word in line.prev.value" class="code-inner" :class="{
+              'word-removed': word.type === ChangeType.REMOVED
+            }">{{ word.value }}</span>
+          </template>
+          <span v-else class="code-inner">{{ line.prev.value }}</span>
+        </td>
+        <td class="num" :data-line-number="line.curr.lineNumber"></td>
+        <td
+          class="code"
+          :class="{
+            'line-added': line.curr.type === ChangeType.ADDED,
+          }"
+        >
+          <template v-if="Array.isArray(line.curr.value)">
+            <span v-for="word in line.curr.value" class="code-inner" :class="{
+              'word-added': word.type === ChangeType.ADDED
+            }">{{ word.value }}</span>
+          </template>
+          <span v-else class="code-inner">{{ line.curr.value }}</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <style scoped lang="scss">
-.wrapper {
+.diff-table {
   width: 100%;
-  background: #f1f1f1;
-  display: flex;
-  padding: 0.5em 1em;
+  table-layout: fixed;
+  border-spacing: 0;
+  border: none;
+  border-collapse: collapse;
+}
 
-  pre {
-    margin: 0;
-  }
+.diff-table td:nth-child(2) {
+  border-right: 1px solid gray;
+}
 
-  .prev,
-  .curr {
-    flex: 1 0 0;
-  }
+.num {
+  width: 1%;
+  min-width: 50px;
+  font-size: 12px;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+    Liberation Mono, monospace;
 
-  .line {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  &::before {
+    content: attr(data-line-number);
   }
+}
 
-  .added {
-    display: inline-block;
-    background-color: green;
-  }
+.code {
+  white-space: pre-wrap;
+}
 
-  .removed {
-    display: inline-block;
-    background-color: red;
-  }
+.code-inner {
+  display: table-cell;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+    Liberation Mono, monospace;
+}
+
+.line-removed {
+  background-color: red;
+}
+.line-added {
+  background-color: green;
+}
+.word-removed {
+  background-color: yellow;
+}
+.word-added {
+  background-color: yellow;
 }
 </style>

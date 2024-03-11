@@ -1,5 +1,4 @@
-import { Change, diffLines } from "diff";
-import { groupBy } from "lodash";
+import { Change, diffLines, diffWords } from "diff";
 import { computed, ref, toValue, watchEffect } from "vue";
 import type { Ref } from "vue";
 
@@ -9,42 +8,42 @@ export enum ChangeType {
   ADDED = "added",
 }
 
-export interface Line {
+export interface DiffComponent {
   value: string;
   type: ChangeType;
 }
 
 export interface Diff {
-  value?: string;
+  value?: string | Diff[];
   lineNumber?: number;
   type?: ChangeType;
 }
 
-export interface DisplayedLineDiff {
+export interface DisplayedDiff {
   prev: Diff;
   curr: Diff;
 }
 
 /**
- * Get lines
+ * Do some cleanup and process of the results returned from diff library
  *
  * @param changes Changes defined by diff library
  */
-function getLines(changes: Change[]): Line[] {
-  const results: Line[] = [];
+function getDiffComponents(changes: Change[]): DiffComponent[] {
+  const results: DiffComponent[] = [];
 
   for (const change of changes) {
-    const lines = change.value.split("\n");
+    const components = change.value.split("\n");
 
-    // Remove empty lines due to split function when '\n' is at the beginning or the end
-    if (lines[0] === "") {
-      lines.shift();
+    // Remove empty components due to split function when '\n' is at the beginning or the end
+    if (components[0] === "") {
+      components.shift();
     }
-    if (lines[lines.length - 1] === "") {
-      lines.pop();
+    if (components[components.length - 1] === "") {
+      components.pop();
     }
 
-    for (const line of lines) {
+    for (const line of components) {
       if (change.added) {
         results.push({
           value: line,
@@ -78,53 +77,113 @@ export function useDiff(
   };
 
   const displayedLines = computed(() => {
-    const lines = getLines(changes.value);
-
-    const results: DisplayedLineDiff[] = [];
-    const skippedLines = [];
+    const components = getDiffComponents(changes.value);
 
     let previousLineNumber = 0;
     let currentLineNumber = 0;
-    let index = 0;
 
-    for (const line of lines) {
-      const prev: Diff = {};
-      const curr: Diff = {};
+    /**
+     * Helper function
+     * @param line Current line
+     */
+    function getDisplayedDiff(
+      components: DiffComponent[],
+      { diffingWord = true }
+    ): DisplayedDiff[] {
+      const skippedLines: Number[] = [];
+      const results: DisplayedDiff[] = [];
+      let index = 0;
 
-      if (line.type === ChangeType.COMMON) {
-        previousLineNumber++;
-        currentLineNumber++;
-
-        prev.lineNumber = previousLineNumber;
-        prev.value = line.value;
-        prev.type = ChangeType.COMMON;
-        curr.lineNumber = currentLineNumber;
-        curr.value = line.value;
-        curr.type = ChangeType.COMMON;
-      } else if (line.type === ChangeType.ADDED) {
-        currentLineNumber++;
-
-        curr.lineNumber = currentLineNumber;
-        curr.value = line.value;
-        curr.type = ChangeType.ADDED;
-      } else {
-        previousLineNumber++;
-
-        prev.lineNumber = previousLineNumber;
-        prev.value = line.value;
-        prev.type = ChangeType.REMOVED;
-
-        // Handle modification
-        if (lines[index + 1].type === ChangeType.ADDED) {
-
+      for (const line of components) {
+        let prev: Diff = {};
+        let curr: Diff = {};
+        if (skippedLines.includes(index)) {
+          index++;
+          continue;
         }
-      }
 
-      results.push({ prev, curr });
-      index++;
+        if (line.type === ChangeType.COMMON) {
+          previousLineNumber++;
+          currentLineNumber++;
+
+          prev.lineNumber = previousLineNumber;
+          prev.value = line.value;
+          prev.type = ChangeType.COMMON;
+          curr.lineNumber = currentLineNumber;
+          curr.value = line.value;
+          curr.type = ChangeType.COMMON;
+        } else if (line.type === ChangeType.ADDED) {
+          currentLineNumber++;
+
+          if (currentLineNumber < results.length) {
+            results[currentLineNumber - 1].curr.lineNumber = currentLineNumber;
+            results[currentLineNumber - 1].curr.value = line.value;
+            results[currentLineNumber - 1].curr.type = line.type;
+          } else {
+            curr.lineNumber = currentLineNumber;
+            curr.value = line.value;
+            curr.type = ChangeType.ADDED;
+          }
+        } else {
+          previousLineNumber++;
+
+          prev.lineNumber = previousLineNumber;
+          prev.value = line.value;
+          prev.type = ChangeType.REMOVED;
+
+          // Handle line modification
+          const nextLine = components[index + 1];
+          if (nextLine && nextLine.type === ChangeType.ADDED) {
+            skippedLines.push(index + 1);
+            currentLineNumber++;
+
+            if (diffingWord) {
+              const tmpLineNumber = currentLineNumber;
+
+              const wordChanges = diffWords(line.value, nextLine.value);
+              const diffComponents = getDiffComponents(wordChanges);
+              const displayedDiffs = getDisplayedDiff(diffComponents, {
+                diffingWord: false,
+              });
+
+              prev.value = [];
+              curr.value = [];
+
+              curr.lineNumber = tmpLineNumber;
+              curr.type = nextLine.type
+
+              for (const diff of displayedDiffs) {
+                diff.curr.lineNumber = tmpLineNumber;
+                diff.prev.lineNumber = tmpLineNumber;
+                prev.value.push(diff.prev);
+                curr.value.push(diff.curr);
+              }
+
+              // Reset line number
+              currentLineNumber = tmpLineNumber;
+              previousLineNumber = tmpLineNumber;
+            } else {
+              if (currentLineNumber < results.length) {
+                results[currentLineNumber - 1].curr.lineNumber =
+                  currentLineNumber;
+                results[currentLineNumber - 1].curr.value = nextLine.value;
+                results[currentLineNumber - 1].curr.type = nextLine.type;
+              } else {
+                curr.lineNumber = currentLineNumber;
+                curr.value = nextLine.value;
+                curr.type = nextLine.type;
+              }
+            }
+          }
+        }
+        index++;
+        results.push({ prev, curr });
+      }
+      return results;
     }
 
-    return results;
+    const displayedLines = getDisplayedDiff(components, { diffingWord: true });
+    return displayedLines;
   });
 
   watchEffect(() => {
