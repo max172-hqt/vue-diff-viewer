@@ -26,7 +26,7 @@ console.log(lines.value);
           class="num"
           :data-line-number="line.prev.lineNumber"
           :class="{
-            'line-removed': line.prev.type === ChangeType.REMOVED,
+            'num-removed': line.prev.type === ChangeType.REMOVED,
           }"
         ></td>
         <td
@@ -51,7 +51,7 @@ console.log(lines.value);
           class="num"
           :data-line-number="line.curr.lineNumber"
           :class="{
-            'line-added': line.curr.type === ChangeType.ADDED,
+            'num-added': line.curr.type === ChangeType.ADDED,
           }"
         ></td>
         <td
@@ -99,13 +99,14 @@ console.log(lines.value);
   font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
     Liberation Mono, monospace;
 
-  &::before {
+  &:before {
     content: attr(data-line-number);
   }
 }
 
 .code {
   white-space: pre-wrap;
+  padding-left: 12px;
 }
 
 .code-inner {
@@ -115,15 +116,40 @@ console.log(lines.value);
     Liberation Mono, monospace;
 }
 
-.line-removed {
+.num-removed {
   background-color: rgba(248, 81, 73, 0.1);
 }
+
+.line-removed {
+  background-color: rgba(248, 81, 73, 0.1);
+  position: relative;
+  &:before {
+    content: "-";
+    position: absolute;
+    left: -3px;
+    top: -2px;
+  }
+}
+
 .word-removed {
-  background-color: rgba(248, 81, 73, 0.4);;
+  background-color: rgba(248, 81, 73, 0.4);
 }
+
+.num-added {
+  background-color: rgba(46, 160, 67, 0.15);
+}
+
 .line-added {
-  background-color: rgba(46, 160, 67, 0.15);;
+  background-color: rgba(46, 160, 67, 0.15);
+  position: relative;
+  &:before {
+    content: "+";
+    position: absolute;
+    left: -3px;
+    top: -2px;
+  }
 }
+
 .word-added {
   background-color: rgba(46, 160, 67, 0.4);
 }

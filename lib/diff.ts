@@ -138,7 +138,8 @@ export function useDiff(
             currentLineNumber++;
 
             if (diffingWord) {
-              const tmpLineNumber = currentLineNumber;
+              const originalCurrentLineNumber = currentLineNumber;
+              const originalPreviousLineNumber = previousLineNumber;
 
               const wordChanges = diffWords(line.value, nextLine.value);
               const diffComponents = getDiffComponents(wordChanges);
@@ -149,25 +150,26 @@ export function useDiff(
               prev.value = [];
               curr.value = [];
 
-              curr.lineNumber = tmpLineNumber;
+              curr.lineNumber = originalCurrentLineNumber;
               curr.type = nextLine.type
 
               for (const diff of displayedDiffs) {
-                diff.curr.lineNumber = tmpLineNumber;
-                diff.prev.lineNumber = tmpLineNumber;
+                diff.curr.lineNumber = originalCurrentLineNumber;
+                diff.prev.lineNumber = originalPreviousLineNumber;
                 prev.value.push(diff.prev);
                 curr.value.push(diff.curr);
               }
 
               // Reset line number
-              currentLineNumber = tmpLineNumber;
-              previousLineNumber = tmpLineNumber;
+              currentLineNumber = originalCurrentLineNumber;
+              previousLineNumber = originalPreviousLineNumber;
             } else {
               if (currentLineNumber < results.length) {
-                results[currentLineNumber - 1].curr.lineNumber =
+                const line = results[currentLineNumber - 1];
+                line.curr.lineNumber =
                   currentLineNumber;
-                results[currentLineNumber - 1].curr.value = nextLine.value;
-                results[currentLineNumber - 1].curr.type = nextLine.type;
+                line.curr.value = nextLine.value;
+                line.curr.type = nextLine.type;
               } else {
                 curr.lineNumber = currentLineNumber;
                 curr.value = nextLine.value;
