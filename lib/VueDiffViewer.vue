@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRef, toRefs, watch } from "vue";
+import { toRefs } from "vue";
 import { ChangeType, useDiff } from "./diff";
 
 const props = defineProps({

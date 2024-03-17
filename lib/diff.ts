@@ -1,4 +1,4 @@
-import { Change, diffLines, diffWords, diffWordsWithSpace } from "diff";
+import { Change, diffLines, diffWordsWithSpace } from "diff";
 import { Ref, computed, ref, toValue, watchEffect } from "vue";
 
 export enum ChangeType {
