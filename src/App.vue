@@ -1,23 +1,28 @@
 <script setup lang="ts">
 import { VueDiffViewer } from "../lib/main";
 
-const prev = `  // Use diffLines for strings, and diffJson for objects...
-  if (typeof oldString === 'string' && typeof newString === 'string') {
-    diffArray = diff.diffLines(
-      oldString.trimRight(),
-      newString.trimRight(),
-      {
-        newlineIsToken: false,
-        ignoreWhitespace: false,
+const prev = `var a1 = {
+  "name": "vue-diff",
+  "version": "0.0.0",
+  "description": "Vue diff viewer",
+  "private": true,
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  }
+}
 `;
-const curr = `  // Use diffLines for strings, and diffJson for objects...
-  if (typeof oldString === 'string' && typeof newString === 'string') {
-    diffArray = diff.diffLines(
-      oldString
-      newString
-      {
-        newlineIsToken: false,
-        ignoreWhitespace: false,
+const curr = `const b2 = {
+  "name": "vue-diff",
+  "version": "1.0.0",
+  "description": "Vue diff viewer",
+  "scripts": {
+    "test": "vue-cli-service test:unit"
+    "lint": "vue-cli-service lint"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  }
+}
 `;
 </script>
 
