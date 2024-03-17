@@ -41,7 +41,6 @@ function getDiffComponents(changes: Change[]): {
   components: DiffComponent[];
   maxLine: number;
 } {
-  console.log(changes);
   let previousLineNumber = 0;
   let currentLineNumber = 0;
   let numLines = 0;
@@ -54,19 +53,17 @@ function getDiffComponents(changes: Change[]): {
     const components = change.value.split("\n");
 
     // Remove empty components due to split function when '\n' is at the beginning or the end
-    if (components[0] === "") {
-      components.shift();
-    }
+    // if (components[0] === "") {
+    //   components.shift();
+    // }
+
     if (components[components.length - 1] === "") {
       components.pop();
     }
 
-    if (
-      index < changes.length - 1 &&
-      change.added &&
-      changes[index - 1].removed
-    ) {
-      numLines--;
+    // Do not count line if it's for modifying
+    if (index > 0 && change.added && changes[index - 1].removed) {
+      numLines -= 1;
     }
 
     for (const line of components) {
@@ -93,14 +90,14 @@ function getDiffComponents(changes: Change[]): {
           lineNumber: [previousLineNumber, currentLineNumber],
         });
       }
-      index++;
       numLines++;
     }
+    index++;
   }
 
   return {
     components: results,
-    maxLine: numLines,
+    maxLine: numLines + 1,
   };
 }
 
@@ -111,7 +108,7 @@ function getDisplayedDiffLines({
   components: DiffComponent[];
   maxLine: number;
 }): DisplayedDiff[] {
-  const results: DisplayedDiff[] = Array(maxLine + 1)
+  const results: DisplayedDiff[] = Array(maxLine)
     .fill(null)
     .map(() => ({ prev: {}, curr: {} }));
 
@@ -155,13 +152,14 @@ function getDisplayedDiffLines({
 
       if (index < components.length - 1) {
         const nextLine = components[index + 1];
-        console.log(removedIndex);
 
         // Line is modified
         if (nextLine.type === ChangeType.ADDED) {
           ignoredLines.push(nextLine.lineNumber);
           results[removedIndex].curr = { ...nextLine };
+          currentInsertPosition = Math.max(removedIndex, currentInsertPosition);
           removedIndex = -1;
+        } else {
           currentInsertPosition = Math.max(
             previousInsertPosition,
             currentInsertPosition
@@ -215,6 +213,7 @@ function getDisplayedDiffLinesAndWords(
     }
   }
 
+  linesCopy.shift();
   return linesCopy;
 }
 
@@ -230,11 +229,9 @@ export function useDiff(
 
   const displayedLines = computed(() => {
     const { components, maxLine } = getDiffComponents(changes.value);
-    console.log({ components });
+    console.log(components);
     const lines = getDisplayedDiffLines({ components, maxLine });
-    console.log({ lines });
     const linesAndWords = getDisplayedDiffLinesAndWords(lines);
-    console.log({ linesAndWords });
     return linesAndWords;
   });
 

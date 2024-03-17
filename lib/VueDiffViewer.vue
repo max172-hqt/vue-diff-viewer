@@ -27,12 +27,14 @@ console.log(lines.value);
           :data-line-number="line.prev.lineNumber"
           :class="{
             'num-removed': line.prev.type === ChangeType.REMOVED,
+            empty: line.prev.type === undefined,
           }"
         ></td>
         <td
           class="code"
           :class="{
             'line-removed': line.prev.type === ChangeType.REMOVED,
+            empty: line.prev.type === undefined,
           }"
         >
           <template v-if="Array.isArray(line.prev.value)">
@@ -52,12 +54,14 @@ console.log(lines.value);
           :data-line-number="line.curr.lineNumber"
           :class="{
             'num-added': line.curr.type === ChangeType.ADDED,
+            empty: line.curr.type === undefined,
           }"
         ></td>
         <td
           class="code"
           :class="{
             'line-added': line.curr.type === ChangeType.ADDED,
+            empty: line.curr.type === undefined,
           }"
         >
           <template v-if="Array.isArray(line.curr.value)">
@@ -137,6 +141,10 @@ console.log(lines.value);
 
 .num-added {
   background-color: rgba(46, 160, 67, 0.15);
+}
+
+.empty {
+  background-color: #8080801a;
 }
 
 .line-added {
