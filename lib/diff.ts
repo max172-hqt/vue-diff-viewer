@@ -40,7 +40,6 @@ function getDiffComponents(changes: Change[]): {
   components: DiffComponent[];
   maxLine: number;
 } {
-  console.log("dsadas", toValue(changes));
   let previousLineNumber = 0;
   let currentLineNumber = 0;
   let numLines = 0;
@@ -108,7 +107,6 @@ function getDisplayedDiffLines({
   components: DiffComponent[];
   maxLine: number;
 }): DisplayedDiff[] {
-  console.log({ components });
   const results: DisplayedDiff[] = Array(maxLine)
     .fill(null)
     .map(() => ({ prev: {}, curr: {} }));
@@ -204,7 +202,6 @@ function getDisplayedDiffLinesAndWords(
         diff.curr.value as string
       );
       const { components } = getDiffComponents(wordChanges);
-      console.log({ components });
 
       diff.prev.value = [];
       diff.curr.value = [];
