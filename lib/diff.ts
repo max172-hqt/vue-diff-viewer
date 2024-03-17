@@ -1,6 +1,5 @@
-import { Change, diffLines, diffWords } from "diff";
-import { computed, ref, toValue, watchEffect } from "vue";
-import type { Ref } from "vue";
+import { Change, diffLines, diffWords, diffWordsWithSpace } from "diff";
+import { Ref, computed, ref, toValue, watchEffect } from "vue";
 
 export enum ChangeType {
   COMMON = "common",
@@ -41,6 +40,7 @@ function getDiffComponents(changes: Change[]): {
   components: DiffComponent[];
   maxLine: number;
 } {
+  console.log("dsadas", toValue(changes));
   let previousLineNumber = 0;
   let currentLineNumber = 0;
   let numLines = 0;
@@ -108,6 +108,7 @@ function getDisplayedDiffLines({
   components: DiffComponent[];
   maxLine: number;
 }): DisplayedDiff[] {
+  console.log({ components });
   const results: DisplayedDiff[] = Array(maxLine)
     .fill(null)
     .map(() => ({ prev: {}, curr: {} }));
@@ -131,7 +132,8 @@ function getDisplayedDiffLines({
       previousInsertPosition++;
       currentInsertPosition++;
       const [previousLine, currentLine] = component.lineNumber;
-      // const position = Math.max(previousLine, currentLine);
+      previousInsertPosition = Math.max(previousInsertPosition, currentInsertPosition);
+      currentInsertPosition = Math.max(previousInsertPosition, currentInsertPosition);
       results[previousInsertPosition].prev = {
         ...component,
         lineNumber: previousLine,
@@ -157,7 +159,7 @@ function getDisplayedDiffLines({
         if (nextLine.type === ChangeType.ADDED) {
           ignoredLines.push(nextLine.lineNumber);
           results[removedIndex].curr = { ...nextLine };
-          currentInsertPosition = Math.max(removedIndex, currentInsertPosition);
+          currentInsertPosition = removedIndex;
           removedIndex = -1;
         } else {
           currentInsertPosition = Math.max(
@@ -165,6 +167,11 @@ function getDisplayedDiffLines({
             currentInsertPosition
           );
         }
+      } else {
+        currentInsertPosition = Math.max(
+          previousInsertPosition,
+          currentInsertPosition
+        );
       }
     } else {
       currentInsertPosition++;
@@ -192,11 +199,12 @@ function getDisplayedDiffLinesAndWords(
     if (prev.type === ChangeType.REMOVED && curr.type === ChangeType.ADDED) {
       const previousLine = diff.prev.lineNumber;
       const currentLine = diff.curr.lineNumber;
-      const wordChanges = diffWords(
+      const wordChanges = diffWordsWithSpace(
         diff.prev.value as string,
         diff.curr.value as string
       );
       const { components } = getDiffComponents(wordChanges);
+      console.log({ components });
 
       diff.prev.value = [];
       diff.curr.value = [];
@@ -229,7 +237,6 @@ export function useDiff(
 
   const displayedLines = computed(() => {
     const { components, maxLine } = getDiffComponents(changes.value);
-    console.log(components);
     const lines = getDisplayedDiffLines({ components, maxLine });
     const linesAndWords = getDisplayedDiffLinesAndWords(lines);
     return linesAndWords;

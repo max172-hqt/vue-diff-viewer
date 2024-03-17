@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toRef, toRefs, watch } from "vue";
 import { ChangeType, useDiff } from "./diff";
 
 const props = defineProps({
@@ -12,9 +13,9 @@ const props = defineProps({
   },
 });
 
-const { displayedLines: lines } = useDiff(props.prev, props.curr);
+const { prev, curr } = toRefs(props)
 
-console.log(lines.value);
+const { displayedLines: lines } = useDiff(prev, curr);
 </script>
 
 <template>
